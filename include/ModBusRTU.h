@@ -129,6 +129,7 @@ typedef enum
     STATE_TX_XMIT               /*!< Transmitter is in transfer state. */
 } eMBSndState;
 extern volatile eMBRcvState eRcvState;
+extern volatile eMBSndState eSndState;
 
 
 void     eMBInit(uint8_t ucSlaveAddress, uint32_t ulBaudRate);

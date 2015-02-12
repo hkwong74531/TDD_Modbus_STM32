@@ -38,6 +38,7 @@ TEST_GROUP(ModbusProtocol)
 	
     void setup()
     {
+		usRegHoldingAddr[0] = 0xBB55;
 		eMBInit(1, 9600);
 		
 		timeout();
@@ -128,7 +129,7 @@ TEST(ModbusProtocol, crcErrorCheck)
 #endif	
 }
 
-TEST(ModbusProtocol, crcCorrectCheck)
+IGNORE_TEST(ModbusProtocol, crcCorrectCheck)
 {
 	ret = eMBPoll();	
 	
@@ -164,9 +165,68 @@ TEST(ModbusProtocol, crcCorrectCheck)
 	timeout();
 	ret = eMBPoll();	
 	
-	BYTES_EQUAL(0xFC, ret);
+	BYTES_EQUAL(0, ret);	// no error
+	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
 	ret = eMBPoll();	
 	
 	BYTES_EQUAL(0xFF, ret);
+}
+
+TEST(ModbusProtocol, successResponse)
+{
+	ret = eMBPoll();	
+	
+	BYTES_EQUAL(0xFF, ret);
+	
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();
+	
+	UART_DR = 0x03;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);	
+	
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();	
+
+	UART_DR = 0x84;	// correct CRC
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x0A;	// correct CRC
+	xMBRTUReceiveFSM();	
+	
+	timeout();
+	ret = eMBPoll();	
+	
+	BYTES_EQUAL(0, ret);	// no error
+	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
+	
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x01, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x03, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x02, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0xAA, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x55, UART_DR);
 }

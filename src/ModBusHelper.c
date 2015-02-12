@@ -11,37 +11,11 @@
 
 uint32_t GPIOA, GPIOB, GPIOC, GPIOD;
 
+uint16_t usRegHoldingAddr[REG_HOLDING_NREGS];
+
 uint8_t UART_DR;
 
 #if 0
-/* ------------------------------- 事件处理队列 -------------------------------*/
-static eMBEventType eQueuedEvent;
-static bool     xEventInQueue;
-
-//对列初始化
-bool xMBPortEventInit( void ) {
-    xEventInQueue = false;
-    return true;
-}
-
-//进入队列
-bool xMBPortEventPost( eMBEventType eEvent ){
-    xEventInQueue = true;
-    eQueuedEvent = eEvent;
-    return true;
-}
-
-//出队列
-bool xMBPortEventGet( eMBEventType * eEvent ){
-  
-    bool xEventHappened = false;
-    if( xEventInQueue ){
-        *eEvent = eQueuedEvent;
-        xEventInQueue = false;
-        xEventHappened = true;
-    }
-    return xEventHappened;
-}
 /* ------------------------------- 串品操作 -----------------------------------*/
 //串口收发控制
 void vMBPortSerialEnable( bool xRxEnable, bool xTxEnable ){

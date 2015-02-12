@@ -7,8 +7,15 @@ uint16_t usRegInputBuf[REG_INPUT_NREGS] =
 
 
 //±£³Ö¼Ä´æÆ÷ÄÚÈÝ
-uint16_t usRegHoldingBuf[REG_HOLDING_NREGS] = 
-{0x0000,0x0001,0x0002,0x0003,0x0004,0x0005};
+uint16_t* usRegHoldingBuf[REG_HOLDING_NREGS] = 	
+{
+	REGHOLDING_00,
+	REGHOLDING_01,
+	REGHOLDING_02,
+	REGHOLDING_03,
+	REGHOLDING_04,
+	REGHOLDING_05,	
+};
 
 #if(MB_FUNC_READ_COILS_ENABLED > 0 || MB_FUNC_WRITE_COIL_ENABLED > 0 || MB_FUNC_WRITE_MULTIPLE_COILS_ENABLED > 0)
 //ÏßÈ¦×´Ì¬£¬ ´æ´¢¸ñÊ½£º&IOÊä³ö¿Ú¼Ä´æÆ÷£¬ Òý½ÅºÅ
@@ -277,8 +284,8 @@ eMBException eMBFuncWriteHoldingRegister( uint8_t * pucFrame, uint16_t * usLen )
       return MB_EX_ILLEGAL_DATA_ADDRESS;
     
     
-    usRegHoldingBuf[usRegAddress] = pucFrame[MB_PDU_FUNC_WRITE_VALUE_OFF] << 8;
-    usRegHoldingBuf[usRegAddress] |= pucFrame[MB_PDU_FUNC_WRITE_VALUE_OFF + 1];
+    *(usRegHoldingBuf[usRegAddress]) = pucFrame[MB_PDU_FUNC_WRITE_VALUE_OFF] << 8;
+    *(usRegHoldingBuf[usRegAddress]) |= pucFrame[MB_PDU_FUNC_WRITE_VALUE_OFF + 1];
 
     return MB_EX_NONE;
 }
@@ -319,8 +326,8 @@ eMBException eMBFuncWriteMultipleHoldingRegister( uint8_t * pucFrame, uint16_t *
     //ÊýÁ¿
     ucReData = &pucFrame[MB_PDU_FUNC_WRITE_MUL_VALUES_OFF];
     for(i = 0; i < usRegCount; i++){
-      usRegHoldingBuf[usRegAddress + i] = ucReData[i * 2] << 8;
-      usRegHoldingBuf[usRegAddress + i] |= ucReData[i * 2 + 1];
+      *(usRegHoldingBuf[usRegAddress + i]) = ucReData[i * 2] << 8;
+      *(usRegHoldingBuf[usRegAddress + i]) |= ucReData[i * 2 + 1];
     }
    
     *usLen = MB_PDU_FUNC_WRITE_MUL_BYTECNT_OFF;        
@@ -364,8 +371,8 @@ eMBException eMBFuncReadHoldingRegister( uint8_t * pucFrame, uint16_t * usLen )
     *pucFrameCur++ =(uint8_t)(usRegCount * 2);
     //»Ø¸´¼Ä´æÆ÷ÄÚÈÝ
     for(i = 0; i < usRegCount; i++){
-      pucFrameCur[i * 2] = usRegHoldingBuf[i] >> 8;
-      pucFrameCur[i * 2 + 1] = usRegHoldingBuf[i] & 0xff;
+      pucFrameCur[i * 2] = *(usRegHoldingBuf[i]) >> 8;
+      pucFrameCur[i * 2 + 1] = *(usRegHoldingBuf[i]) & 0xff;
     }       
     *usLen = usRegCount * 2 + 2;        
     return MB_EX_NONE;
@@ -421,8 +428,8 @@ eMBException eMBFuncReadWriteMultipleHoldingRegister( uint8_t * pucFrame, uint16
     //Ð´    
     pucFrameCur = &pucFrame[MB_PDU_FUNC_READWRITE_WRITE_VALUES_OFF];
     for(i = 0; i < usRegWriteCount; i++){
-      usRegHoldingBuf[usRegWriteAddress + i] = pucFrameCur[i * 2] << 8;
-      usRegHoldingBuf[usRegWriteAddress + i] |= pucFrameCur[i * 2 + 1];
+      *(usRegHoldingBuf[usRegWriteAddress + i]) = pucFrameCur[i * 2] << 8;
+      *(usRegHoldingBuf[usRegWriteAddress + i]) |= pucFrameCur[i * 2 + 1];
     }
     
     //¶Á        
@@ -430,8 +437,8 @@ eMBException eMBFuncReadWriteMultipleHoldingRegister( uint8_t * pucFrame, uint16
     *pucFrameCur++ = MB_FUNC_READWRITE_MULTIPLE_REGISTERS; 
     *pucFrameCur++ = ( uint8_t ) ( usRegReadCount * 2 );
     for(i = 0; i < usRegReadCount; i++){
-      pucFrameCur[i * 2] = usRegHoldingBuf[i] >> 8;
-      pucFrameCur[i * 2 + 1] = usRegHoldingBuf[i] & 0xff;
+      pucFrameCur[i * 2] = *(usRegHoldingBuf[i]) >> 8;
+      pucFrameCur[i * 2 + 1] = *(usRegHoldingBuf[i]) & 0xff;
     }       
     *usLen = 2 * usRegReadCount + 2;
         
