@@ -382,3 +382,163 @@ TEST(ModbusProtocol, failureReadHolding3)
 	ret = eMBPoll();	
 	BYTES_EQUAL(0xFF, ret);
 }
+
+TEST(ModbusProtocol, successWriteHolding)
+{
+	LONGS_EQUAL(0xAA55, usRegHoldingAddr[0]);	
+	
+	ret = eMBPoll();	
+	
+	BYTES_EQUAL(0xFF, ret);
+	
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();
+	
+	UART_DR = 0x06;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);	
+	
+	UART_DR = 0xBB;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x66;
+	xMBRTUReceiveFSM();	
+
+	UART_DR = 0x7B;	// correct CRC
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x10;	// correct CRC
+	xMBRTUReceiveFSM();	
+	
+	timeout();
+	ret = eMBPoll();	
+	
+	BYTES_EQUAL(0, ret);	// no error
+	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
+	
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);
+	
+	LONGS_EQUAL(0xBB66, usRegHoldingAddr[0]);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x01, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x06, UART_DR);
+	
+	ret = eMBPoll();	
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0xBB, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x66, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x7B, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x10, UART_DR);
+
+	xMBRTUTransmitFSM();	// interrupt after last byte sent, and transmit idle again
+	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
+	
+	timeout();
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);
+}
+
+TEST(ModbusProtocol, failureWriteHolding2)
+{
+
+	ret = eMBPoll();	
+	
+	BYTES_EQUAL(0xFF, ret);
+	
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();
+	
+	UART_DR = 0x06;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x07;
+	xMBRTUReceiveFSM();
+
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);	
+	
+	UART_DR = 0xBB;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x66;
+	xMBRTUReceiveFSM();	
+
+	UART_DR = 0xCA;	// correct CRC
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0xD1;	// correct CRC
+	xMBRTUReceiveFSM();	
+	
+	timeout();
+	ret = eMBPoll();	
+	
+	BYTES_EQUAL(2, ret);	// exceptionCode = 2
+	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
+	
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);
+	
+	LONGS_EQUAL(0xBB66, usRegHoldingAddr[0]);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x01, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x06, UART_DR);
+	
+	ret = eMBPoll();	
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0xBB, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x66, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x7B, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x10, UART_DR);
+
+	xMBRTUTransmitFSM();	// interrupt after last byte sent, and transmit idle again
+	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
+	
+	timeout();
+	ret = eMBPoll();	
+	BYTES_EQUAL(0xFF, ret);
+}
+
