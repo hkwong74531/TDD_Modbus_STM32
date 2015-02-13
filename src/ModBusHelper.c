@@ -12,6 +12,7 @@
 uint32_t GPIOA, GPIOB, GPIOC, GPIOD;
 
 uint16_t usRegHoldingAddr[REG_HOLDING_NREGS];
+uint16_t usRegInputAddr[REG_INPUT_NREGS];
 
 uint8_t UART_DR;
 

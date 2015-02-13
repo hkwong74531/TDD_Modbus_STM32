@@ -20,6 +20,7 @@
 
 extern uint32_t GPIOA, GPIOB, GPIOC, GPIOD;
 extern uint16_t usRegHoldingAddr[];
+extern uint16_t usRegInputAddr[];
 
 //CPU  寄存器类型指针定义
 typedef volatile uint32_t * CPURegistertype;
@@ -31,6 +32,7 @@ typedef volatile uint32_t * CPURegistertype;
 #define CPU_CLK                                  72      //72MHz             
 
 #define REG_HOLDING_NREGS                        6       //保持寄存器数量
+#define REG_INPUT_NREGS                          6       //输入寄存器数量
 
 #define MBCOIL_00	{&GPIOB, 7}
 #define MBCOIL_01	{&GPIOB, 8}
@@ -56,7 +58,14 @@ typedef volatile uint32_t * CPURegistertype;
 #define REGHOLDING_03	(usRegHoldingAddr + 3)
 #define REGHOLDING_04	(usRegHoldingAddr + 4)
 #define REGHOLDING_05	(usRegHoldingAddr + 5)
-                 
+
+#define REGINPUT_00	(usRegInputAddr)
+#define	REGINPUT_01	(usRegInputAddr + 1)
+#define	REGINPUT_02	(usRegInputAddr + 2)
+#define	REGINPUT_03	(usRegInputAddr + 3)
+#define	REGINPUT_04	(usRegInputAddr + 4)
+#define	REGINPUT_05	(usRegInputAddr + 5)
+	
 #define ENTER_CRITICAL_SECTION( )        //关总中断
 #define EXIT_CRITICAL_SECTION( )         //开总中断
 

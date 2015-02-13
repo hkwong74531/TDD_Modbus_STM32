@@ -2,9 +2,20 @@
 #include "ModBusFunc.h"
 
 //ÊäÈë¼Ä´æÆ÷ÄÚÈÝ
+#if 0
 uint16_t usRegInputBuf[REG_INPUT_NREGS] = 
 {0x1000,0x1001,0x1002,0x1003,0x1004,0x1005};
-
+#else
+uint16_t* usRegInputBuf[REG_INPUT_NREGS] = 	
+{
+	REGINPUT_00,
+	REGINPUT_01,
+	REGINPUT_02,
+	REGINPUT_03,
+	REGINPUT_04,
+	REGINPUT_05,	
+};
+#endif
 
 //±£³Ö¼Ä´æÆ÷ÄÚÈÝ
 uint16_t* usRegHoldingBuf[REG_HOLDING_NREGS] = 	
@@ -316,7 +327,9 @@ eMBException eMBFuncWriteMultipleHoldingRegister( uint8_t * pucFrame, uint16_t *
     ucRegByteCount = pucFrame[MB_PDU_FUNC_WRITE_MUL_BYTECNT_OFF];   
     if((usRegCount > MB_PDU_FUNC_WRITE_MUL_REGCNT_MAX) || (ucRegByteCount !=  (uint8_t)(2 * usRegCount )))
       return MB_EX_ILLEGAL_DATA_VALUE; 
-    
+	if( *usLen > ( MB_PDU_FUNC_WRITE_MUL_SIZE_MIN + MB_PDU_SIZE_MIN + ucRegByteCount) )
+	  return MB_EX_ILLEGAL_DATA_VALUE; 
+  
     //¼Ä´æÆ÷µØÖ·¼ì²â
     usRegAddress = ( uint16_t )( pucFrame[MB_PDU_FUNC_WRITE_MUL_ADDR_OFF] << 8 );
     usRegAddress |= ( uint16_t )( pucFrame[MB_PDU_FUNC_WRITE_MUL_ADDR_OFF + 1] );
@@ -479,8 +492,8 @@ eMBException eMBFuncReadInputRegister( uint8_t * pucFrame, uint16_t * usLen )
     *pucFrameCur++ = (uint8_t)(usRegCount * 2);
 
     for(i = 0; i < usRegCount; i++){
-      pucFrameCur[i * 2] = usRegInputBuf[i] >> 8;
-      pucFrameCur[i * 2 + 1] = usRegInputBuf[i] & 0xff;
+      pucFrameCur[i * 2] = *(usRegInputBuf[i]) >> 8;
+      pucFrameCur[i * 2 + 1] = *(usRegInputBuf[i]) & 0xff;
     }       
             
     *usLen = usRegCount * 2 + 2;

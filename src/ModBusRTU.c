@@ -42,7 +42,7 @@
 volatile eMBSndState eSndState;
 volatile eMBRcvState eRcvState;
 
-volatile uint8_t  ucRTUBuf[MB_SER_PDU_SIZE_MAX];
+static volatile uint8_t  ucRTUBuf[MB_SER_PDU_SIZE_MAX];
 
 static volatile uint8_t *pucSndBufferCur;
 static volatile uint16_t usSndBufferCount;
@@ -330,5 +330,10 @@ void TIME_IQR_HANDLER( void ){
   }
   vMBPortTimersDisable();
   eRcvState = STATE_RX_IDLE;
+}
+
+uint8_t ucADUReadRequestByte(uint8_t n)
+{
+	return ucRTUBuf[n];
 }
 
