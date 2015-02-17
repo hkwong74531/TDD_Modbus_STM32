@@ -40,6 +40,7 @@
 #include "ModBusHelper.h"
 #else
 #include <string.h>
+#include "ModBusHw.h"
 #endif
 #include "Bit.h"
 
@@ -122,7 +123,8 @@ typedef enum
     MB_EX_SLAVE_BUSY = 0x06,
     MB_EX_MEMORY_PARITY_ERROR = 0x08,
     MB_EX_GATEWAY_PATH_FAILED = 0x0A,
-    MB_EX_GATEWAY_TGT_FAILED = 0x0B
+    MB_EX_GATEWAY_TGT_FAILED = 0x0B,
+	MB_EX_SLAVE_NOT_INIT = 0x20
 } eMBException;
 
 typedef enum

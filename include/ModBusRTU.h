@@ -41,6 +41,7 @@
 #include "ModBusHelper.h"
 #else
 #include <string.h>
+#include "ModBusHw.h"
 #endif
 #include "ModBusFunc.h"
 
@@ -132,11 +133,14 @@ extern volatile eMBRcvState eRcvState;
 extern volatile eMBSndState eSndState;
 
 uint8_t  ucADUReadRequestByte(uint8_t);
+void ucMBSetInitState(bool);
+bool ucMBGetInitState(void);
 void     eMBInit(uint8_t ucSlaveAddress, uint32_t ulBaudRate);
 uint8_t  eMBPoll( void );
 void     xMBRTUReceiveFSM( void );
 void     xMBRTUTransmitFSM( void );
 
+#define ucGetFunctionCode() ucADUReadRequestByte(1)
 
 #endif
 

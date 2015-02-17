@@ -50,7 +50,7 @@ static volatile uint16_t usSndBufferCount;
 static volatile uint16_t usRcvBufferPos;
 
 static uint8_t    ucMBAddress;
-
+static bool       ucMBInitState;
 
 
 /* 定义功很码与功能处理函数列表 */
@@ -250,6 +250,7 @@ void eMBInit(uint8_t ucSlaveAddress, uint32_t ulBaudRate)
       return;
     }
     ucMBAddress = ucSlaveAddress;
+	ucMBInitState = false;
 #if 0	
     xMBPortSerialInit(ulBaudRate);
     
@@ -288,16 +289,22 @@ uint8_t eMBPoll( void ){
         ucMBFrame = (uint8_t *) &ucRTUBuf[MB_SER_PDU_PDU_OFF];	
         usLength = (uint16_t)( usRcvBufferPos - MB_SER_PDU_PDU_OFF - MB_SER_PDU_SIZE_CRC);
         ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];
-        eException = MB_EX_ILLEGAL_FUNCTION;
-        for(i = 0; i < MB_FUNC_HANDLERS_MAX; i++ ){                  //执行功能码
-          if( xFuncHandlers[i].ucFunctionCode == 0 ){
-            return MB_EX_ILLEGAL_FUNCTION;
-          }
-          else if( xFuncHandlers[i].ucFunctionCode == ucFunctionCode ){
-            eException = xFuncHandlers[i].pxHandler( ucMBFrame, &usLength );
-            break;                               
-          }
-      }
+		if(ucMBInitState == false)
+		{
+			eException = MB_EX_SLAVE_NOT_INIT;
+		}
+		else
+		{
+			for(i = 0; i < MB_FUNC_HANDLERS_MAX; i++ ){                  //执行功能码
+				if( xFuncHandlers[i].ucFunctionCode == 0 ){
+					return MB_EX_ILLEGAL_FUNCTION;
+				}
+				else if( xFuncHandlers[i].ucFunctionCode == ucFunctionCode ){
+					eException = xFuncHandlers[i].pxHandler( ucMBFrame, &usLength );
+					break;                               
+				}
+			}
+		}
       if(IS_NOT_BROADCAST){                                        //回复主机
         if( eException != MB_EX_NONE ){                            //错误码         
           usLength = 0;
@@ -337,3 +344,12 @@ uint8_t ucADUReadRequestByte(uint8_t n)
 	return ucRTUBuf[n];
 }
 
+void ucMBSetInitState(bool state)
+{
+	ucMBInitState = state;
+}
+
+bool ucMBGetInitState(void)
+{
+	return ucMBInitState;
+}
