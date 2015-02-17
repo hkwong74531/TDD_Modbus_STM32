@@ -251,4 +251,7 @@ eMBException    eMBFuncReadWriteMultipleHoldingRegister( uint8_t * pucFrame, uin
 
 #define MB_PDU_FUNC_READ_RSP_BYTECNT_OFF    ( MB_PDU_DATA_OFF )
 
+void ucMBSetInitState(bool);
+bool ucMBGetInitState(void);
+
 #endif

@@ -54,7 +54,7 @@ TEST_GROUP(ModbusProtocol)
 		
 		eMBInit(1, 9600);
 		
-		ucMBSetInitState(true);
+		ucMBSetInitState(false);
 		
 		timeout();
 		ret = eMBPoll();	

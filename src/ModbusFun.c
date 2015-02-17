@@ -1,11 +1,9 @@
 /* ----------------------- System includes ----------------------------------*/
 #include "ModBusFunc.h"
 
+static bool ucMBInitState;
+
 //输入寄存器内容
-#if 0
-uint16_t usRegInputBuf[REG_INPUT_NREGS] = 
-{0x1000,0x1001,0x1002,0x1003,0x1004,0x1005};
-#else
 uint16_t* usRegInputBuf[REG_INPUT_NREGS] = 	
 {
 	REGINPUT_00,
@@ -15,7 +13,6 @@ uint16_t* usRegInputBuf[REG_INPUT_NREGS] =
 	REGINPUT_04,
 	REGINPUT_05,	
 };
-#endif
 
 //保持寄存器内容
 uint16_t* usRegHoldingBuf[REG_HOLDING_NREGS] = 	
@@ -58,6 +55,16 @@ MBDiscreteType MBDiscretes[REG_DISCRETE_SIZE] =
 };
 #endif
 
+void ucMBSetInitState(bool state)
+{
+	ucMBInitState = state;
+}
+
+bool ucMBGetInitState(void)
+{
+	return ucMBInitState;
+}
+
 /* -----------------------------------------------------------------------------
  * 功    能： 0x01（1） 读多个线圈 
  * 参    数： pucFrame去除地址后的数制桢
@@ -74,7 +81,12 @@ eMBException eMBFuncReadCoils( uint8_t * pucFrame, uint16_t * usLen )
     uint8_t           i, j, bit;
     uint8_t           ByteN;
 	  uint8_t           BitN;
-    
+
+	if(ucMBGetInitState() == false)
+	{
+		return MB_EX_SLAVE_NOT_INIT;
+	}
+   
     //数据桢长度检测
     if( *usLen != ( MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN ) )
       return MB_EX_ILLEGAL_DATA_VALUE; 
@@ -227,6 +239,12 @@ eMBException eMBFuncReadDiscreteInputs( uint8_t * pucFrame, uint16_t * usLen )
     uint8_t           i, j, bit;
     uint8_t           ByteN;
     uint8_t           BitN;
+
+	if(ucMBGetInitState() == false)
+	{
+		return MB_EX_SLAVE_NOT_INIT;
+	}
+
     //数据桢长度检测
     if( *usLen != ( MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN ) )
       return MB_EX_ILLEGAL_DATA_VALUE; 
@@ -361,6 +379,12 @@ eMBException eMBFuncReadHoldingRegister( uint8_t * pucFrame, uint16_t * usLen )
     uint16_t          usRegCount;
     uint8_t          *pucFrameCur;
     uint8_t           i;
+
+	if(ucMBGetInitState() == false)
+	{
+		return MB_EX_SLAVE_NOT_INIT;
+	}
+
     //桢长检测
     if(*usLen != (MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN))
       return MB_EX_ILLEGAL_DATA_VALUE;
@@ -471,6 +495,11 @@ eMBException eMBFuncReadInputRegister( uint8_t * pucFrame, uint16_t * usLen )
     uint16_t          usRegCount;
     uint8_t          *pucFrameCur;
     uint8_t           i;
+
+	if(ucMBGetInitState() == false)
+	{
+		return MB_EX_SLAVE_NOT_INIT;
+	}
 
     if( *usLen != ( MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN ) )
       return MB_EX_ILLEGAL_DATA_VALUE;
