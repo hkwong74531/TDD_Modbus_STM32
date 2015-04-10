@@ -134,9 +134,11 @@ extern volatile eMBSndState eSndState;
 
 uint8_t  ucADUReadRequestByte(uint8_t);
 void     eMBInit(uint8_t ucSlaveAddress, uint32_t ulBaudRate);
-uint8_t  eMBPoll( void );
+uint8_t  eMBPoll( uint8_t* func );
 void     xMBRTUReceiveFSM( void );
 void     xMBRTUTransmitFSM( void );
+
+void modBusWriteFunctionHandler(uint8_t);
 
 #define ucGetFunctionCode() ucADUReadRequestByte(1)
 

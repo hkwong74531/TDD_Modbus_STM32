@@ -27,17 +27,20 @@ extern "C"
 TEST_GROUP(ModbusProtocol)
 {
 	uint8_t ret;
+	uint8_t function;
 	
 	void timeout()
 	{
-		ret = eMBPoll();
-		ret = eMBPoll();
-		ret = eMBPoll();	
+		ret = eMBPoll(&function);
+		ret = eMBPoll(&function);
+		ret = eMBPoll(&function);	
 		TIME_IQR_HANDLER();	
 	}
 	
     void setup()
     {
+		test = 0;
+		
 		usRegHoldingAddr[0] = 0xAA55;
 		usRegHoldingAddr[1] = 0x1111;
 		usRegHoldingAddr[2] = 0x2222;
@@ -54,10 +57,10 @@ TEST_GROUP(ModbusProtocol)
 		
 		eMBInit(1, 9600);
 		
-		ucMBSetInitState(false);
+		ucMBSetInitState(1);
 		
 		timeout();
-		ret = eMBPoll();	
+		ret = eMBPoll(&function);	
     }
 
     void teardown()
@@ -73,7 +76,7 @@ IGNORE_TEST(ModbusProtocol, initialCheck)
 
 	LONGS_EQUAL(STATE_RX_IDLE, eRcvState);	
 	
-	ret = eMBPoll();
+	ret = eMBPoll(&function);
 	
 	BYTES_EQUAL(0xFF, ret);
 }
@@ -81,7 +84,7 @@ IGNORE_TEST(ModbusProtocol, initialCheck)
 TEST(ModbusProtocol, timeoutCheck)
 {
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -89,19 +92,19 @@ TEST(ModbusProtocol, timeoutCheck)
 	xMBRTUReceiveFSM();
 
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFD, ret);	// 最小桢判断
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, crcErrorCheck)
 {
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -118,7 +121,7 @@ TEST(ModbusProtocol, crcErrorCheck)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -134,11 +137,11 @@ TEST(ModbusProtocol, crcErrorCheck)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFC, ret);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 #endif	
@@ -146,7 +149,7 @@ TEST(ModbusProtocol, crcErrorCheck)
 
 IGNORE_TEST(ModbusProtocol, crcCorrectCheck)
 {
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -162,7 +165,7 @@ IGNORE_TEST(ModbusProtocol, crcCorrectCheck)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -178,19 +181,19 @@ IGNORE_TEST(ModbusProtocol, crcCorrectCheck)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, successReadHolding)
 {
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -206,7 +209,7 @@ TEST(ModbusProtocol, successReadHolding)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -222,12 +225,12 @@ TEST(ModbusProtocol, successReadHolding)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	xMBRTUTransmitFSM();
@@ -236,7 +239,7 @@ TEST(ModbusProtocol, successReadHolding)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x03, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x02, UART_DR);
@@ -257,13 +260,13 @@ TEST(ModbusProtocol, successReadHolding)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, failureReadHolding2)
 {
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -276,10 +279,10 @@ TEST(ModbusProtocol, failureReadHolding2)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	UART_DR = 0x06;
+	UART_DR = 0x56;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -291,16 +294,16 @@ TEST(ModbusProtocol, failureReadHolding2)
 	UART_DR = 0x64;	// correct CRC
 	xMBRTUReceiveFSM();
 
-	UART_DR = 0x0B;	// correct CRC
+	UART_DR = 0x1A;	// correct CRC
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(2, ret);	// exceptionCode = 2
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	xMBRTUTransmitFSM();
@@ -309,7 +312,7 @@ TEST(ModbusProtocol, failureReadHolding2)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x83, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x02, UART_DR);
@@ -324,13 +327,13 @@ TEST(ModbusProtocol, failureReadHolding2)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, failureReadHolding3)
 {
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -346,7 +349,7 @@ TEST(ModbusProtocol, failureReadHolding3)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -365,12 +368,12 @@ TEST(ModbusProtocol, failureReadHolding3)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(3, ret);	// exceptionCode = 3
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	xMBRTUTransmitFSM();
@@ -379,7 +382,7 @@ TEST(ModbusProtocol, failureReadHolding3)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x83, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x03, UART_DR);
@@ -394,7 +397,7 @@ TEST(ModbusProtocol, failureReadHolding3)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
@@ -402,7 +405,7 @@ TEST(ModbusProtocol, successWriteHolding)
 {
 	LONGS_EQUAL(0xAA55, usRegHoldingAddr[0]);	
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -418,7 +421,7 @@ TEST(ModbusProtocol, successWriteHolding)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0xBB;
@@ -434,12 +437,12 @@ TEST(ModbusProtocol, successWriteHolding)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	LONGS_EQUAL(0xBB66, usRegHoldingAddr[0]);
@@ -450,7 +453,7 @@ TEST(ModbusProtocol, successWriteHolding)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x06, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x00, UART_DR);
@@ -474,14 +477,14 @@ TEST(ModbusProtocol, successWriteHolding)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, failureWriteHolding2)
 {
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -494,10 +497,10 @@ TEST(ModbusProtocol, failureWriteHolding2)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	UART_DR = 0x07;
+	UART_DR = 0x56;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0xBB;
@@ -506,19 +509,19 @@ TEST(ModbusProtocol, failureWriteHolding2)
 	UART_DR = 0x66;
 	xMBRTUReceiveFSM();	
 
-	UART_DR = 0xCA;	// correct CRC
+	UART_DR = 0x9B;	// correct CRC
 	xMBRTUReceiveFSM();
 
-	UART_DR = 0xD1;	// correct CRC
+	UART_DR = 0x00;	// correct CRC
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(2, ret);	// exceptionCode = 2
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	xMBRTUTransmitFSM();
@@ -527,7 +530,7 @@ TEST(ModbusProtocol, failureWriteHolding2)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x86, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x02, UART_DR);
@@ -542,14 +545,14 @@ TEST(ModbusProtocol, failureWriteHolding2)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, failureWriteHolding3)
 {
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -565,7 +568,7 @@ TEST(ModbusProtocol, failureWriteHolding3)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 #if 0	
 	UART_DR = 0x00;	// intentionally add one more byte
@@ -599,12 +602,12 @@ TEST(ModbusProtocol, failureWriteHolding3)
 	xMBRTUReceiveFSM();	
 #endif	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(3, ret);	// exceptionCode = 2
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	xMBRTUTransmitFSM();
@@ -613,7 +616,7 @@ TEST(ModbusProtocol, failureWriteHolding3)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x86, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x03, UART_DR);
@@ -628,7 +631,7 @@ TEST(ModbusProtocol, failureWriteHolding3)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
@@ -641,7 +644,7 @@ TEST(ModbusProtocol, successWriteHoldingMultiple)
 	LONGS_EQUAL(0x4444, usRegHoldingAddr[4]);	
 	LONGS_EQUAL(0x0707, usRegHoldingAddr[5]);		
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -657,7 +660,7 @@ TEST(ModbusProtocol, successWriteHoldingMultiple)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -712,12 +715,12 @@ TEST(ModbusProtocol, successWriteHoldingMultiple)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	LONGS_EQUAL(0x8800, usRegHoldingAddr[0]);
@@ -733,7 +736,7 @@ TEST(ModbusProtocol, successWriteHoldingMultiple)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x10, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x00, UART_DR);
@@ -757,11 +760,11 @@ TEST(ModbusProtocol, successWriteHoldingMultiple)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
-TEST(ModbusProtocol, failureWriteHoldingMultiple2)
+IGNORE_TEST(ModbusProtocol, failureWriteHoldingMultiple2)
 {
 	LONGS_EQUAL(0xAA55, usRegHoldingAddr[0]);	
 	LONGS_EQUAL(0x1111, usRegHoldingAddr[1]);	
@@ -770,7 +773,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple2)
 	LONGS_EQUAL(0x4444, usRegHoldingAddr[4]);	
 	LONGS_EQUAL(0x0707, usRegHoldingAddr[5]);		
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -786,7 +789,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple2)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -847,12 +850,12 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple2)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(2, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	LONGS_EQUAL(0xAA55, usRegHoldingAddr[0]);	
@@ -868,7 +871,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple2)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x90, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x02, UART_DR);
@@ -883,7 +886,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple2)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
@@ -896,7 +899,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple3)
 	LONGS_EQUAL(0x4444, usRegHoldingAddr[4]);	
 	LONGS_EQUAL(0x0707, usRegHoldingAddr[5]);		
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -912,7 +915,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple3)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
@@ -973,12 +976,12 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple3)
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(3, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	LONGS_EQUAL(0xAA55, usRegHoldingAddr[0]);	
@@ -994,7 +997,7 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple3)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x90, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x03, UART_DR);
@@ -1009,13 +1012,15 @@ TEST(ModbusProtocol, failureWriteHoldingMultiple3)
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 }
 
 TEST(ModbusProtocol, successReadInput)
 {
-	ret = eMBPoll();	
+	ucMBSetInitState(1);
+	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0xFF, ret);
 	
@@ -1031,28 +1036,28 @@ TEST(ModbusProtocol, successReadInput)
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);	
 	
 	UART_DR = 0x00;
 	xMBRTUReceiveFSM();
 
-	UART_DR = 0x06;
+	UART_DR = 0x07;//06
 	xMBRTUReceiveFSM();	
 
-	UART_DR = 0x70;	// correct CRC
+	UART_DR = 0xB1;	//70// correct CRC
 	xMBRTUReceiveFSM();
 
-	UART_DR = 0x08;	// correct CRC
+	UART_DR = 0xC8;	//08// correct CRC
 	xMBRTUReceiveFSM();	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	
 	BYTES_EQUAL(0, ret);	// no error
 	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
 	
 	xMBRTUTransmitFSM();
@@ -1061,10 +1066,10 @@ TEST(ModbusProtocol, successReadInput)
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x04, UART_DR);
 	
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 
 	xMBRTUTransmitFSM();
-	BYTES_EQUAL(12, UART_DR);
+	BYTES_EQUAL(14, UART_DR);//12
 
 	xMBRTUTransmitFSM();
 	BYTES_EQUAL(0x80, UART_DR);
@@ -1103,16 +1108,183 @@ TEST(ModbusProtocol, successReadInput)
 	BYTES_EQUAL(0x05, UART_DR);
 
 	xMBRTUTransmitFSM();
-	BYTES_EQUAL(0x24, UART_DR);
+	BYTES_EQUAL(0x00, UART_DR);
 
 	xMBRTUTransmitFSM();
-	BYTES_EQUAL(0x13, UART_DR);
+	BYTES_EQUAL(0x01, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x19, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x0C, UART_DR);
 
 	xMBRTUTransmitFSM();	// interrupt after last byte sent, and transmit idle again
 	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
 	
 	timeout();
-	ret = eMBPoll();	
+	ret = eMBPoll(&function);	
 	BYTES_EQUAL(0xFF, ret);
-	BYTES_EQUAL(0x04, ucADUReadRequestByte(1));
+	BYTES_EQUAL(0x04, ucADUReadRequestByte(0));
+}
+
+TEST(ModbusProtocol, writeHoldingFunction)
+{
+	LONGS_EQUAL(0xAA55, usRegHoldingAddr[0]);	
+	
+	ret = eMBPoll(&function);	
+	
+	BYTES_EQUAL(0xFF, ret);
+	
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();
+	
+	UART_DR = 0x06;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	ret = eMBPoll(&function);	
+	BYTES_EQUAL(0xFF, ret);	
+	
+	UART_DR = 0xBB;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x66;
+	xMBRTUReceiveFSM();	
+
+	UART_DR = 0x7B;	// correct CRC
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x10;	// correct CRC
+	xMBRTUReceiveFSM();	
+	
+	timeout();
+	ret = eMBPoll(&function);	
+	
+	BYTES_EQUAL(0, ret);	// no error
+	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
+	BYTES_EQUAL(6, function);
+	
+	LONGS_EQUAL(0, test);
+	modBusWriteFunctionHandler(function);
+	LONGS_EQUAL(0xBB66, test);
+	
+	ret = eMBPoll(&function);	
+	BYTES_EQUAL(0xFF, ret);
+	
+	LONGS_EQUAL(0xBB66, usRegHoldingAddr[0]);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x01, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x06, UART_DR);
+	
+	ret = eMBPoll(&function);	
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0xBB, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x66, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x7B, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x10, UART_DR);
+
+	xMBRTUTransmitFSM();	// interrupt after last byte sent, and transmit idle again
+	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
+	
+	timeout();
+	ret = eMBPoll(&function);	
+	BYTES_EQUAL(0xFF, ret);
+}
+
+TEST(ModbusProtocol, readInputInitState)
+{
+	ucMBSetInitState(1);
+	
+	ret = eMBPoll(&function);	
+	
+	BYTES_EQUAL(0xFF, ret);
+	
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();
+	
+	UART_DR = 0x04;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x06;
+	xMBRTUReceiveFSM();
+
+	ret = eMBPoll(&function);	
+	BYTES_EQUAL(0xFF, ret);	
+	
+	UART_DR = 0x00;
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0x01;
+	xMBRTUReceiveFSM();	
+
+	UART_DR = 0xD1;	// correct CRC
+	xMBRTUReceiveFSM();
+
+	UART_DR = 0xCB;	// correct CRC
+	xMBRTUReceiveFSM();	
+	
+	timeout();
+	ret = eMBPoll(&function);	
+	
+	BYTES_EQUAL(0, ret);	// no error
+	BYTES_EQUAL(STATE_TX_XMIT, eSndState);
+	
+	ret = eMBPoll(&function);	
+	BYTES_EQUAL(0xFF, ret);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x01, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x04, UART_DR);
+	
+	ret = eMBPoll(&function);	
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x02, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x00, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x01, UART_DR);
+	
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0x78, UART_DR);
+
+	xMBRTUTransmitFSM();
+	BYTES_EQUAL(0xF0, UART_DR);
+
+	xMBRTUTransmitFSM();	// interrupt after last byte sent, and transmit idle again
+	BYTES_EQUAL(STATE_TX_IDLE, eSndState);	
+	
+	timeout();
+	ret = eMBPoll(&function);	
+	BYTES_EQUAL(0xFF, ret);
+//	BYTES_EQUAL(0x04, ucADUReadRequestByte(0));
 }

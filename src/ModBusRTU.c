@@ -138,6 +138,95 @@ static const uint8_t aucCRCLo[] = {
 static eMBEventType eQueuedEvent;
 static bool     xEventInQueue;
 
+static void (*writeHoldingFunc[REG_HOLDING_NREGS])(uint16_t*) = 	
+{
+	REGHOLDING_FUNC_00,
+	REGHOLDING_FUNC_01,
+	REGHOLDING_FUNC_02,
+	REGHOLDING_FUNC_03,
+	REGHOLDING_FUNC_04,
+	REGHOLDING_FUNC_05,	
+	REGHOLDING_FUNC_06,
+	REGHOLDING_FUNC_07,
+	REGHOLDING_FUNC_08,
+	REGHOLDING_FUNC_09,
+	REGHOLDING_FUNC_10,
+	REGHOLDING_FUNC_11,	
+	REGHOLDING_FUNC_12,
+	REGHOLDING_FUNC_13,
+	REGHOLDING_FUNC_14,
+	REGHOLDING_FUNC_15,	
+	REGHOLDING_FUNC_16,
+	REGHOLDING_FUNC_17,
+	REGHOLDING_FUNC_18,
+	REGHOLDING_FUNC_19,
+	REGHOLDING_FUNC_20,
+	REGHOLDING_FUNC_21,	
+	REGHOLDING_FUNC_22,
+	REGHOLDING_FUNC_23,
+	REGHOLDING_FUNC_24,
+	REGHOLDING_FUNC_25,	
+	REGHOLDING_FUNC_26,
+	REGHOLDING_FUNC_27,
+	REGHOLDING_FUNC_28,
+	REGHOLDING_FUNC_29,
+	REGHOLDING_FUNC_30,
+	REGHOLDING_FUNC_31,	
+	REGHOLDING_FUNC_32,
+	REGHOLDING_FUNC_33,
+	REGHOLDING_FUNC_34,
+	REGHOLDING_FUNC_35,	
+	REGHOLDING_FUNC_36,
+	REGHOLDING_FUNC_37,
+	REGHOLDING_FUNC_38,
+	REGHOLDING_FUNC_39,
+	REGHOLDING_FUNC_40,
+	REGHOLDING_FUNC_41,	
+	REGHOLDING_FUNC_42,
+	REGHOLDING_FUNC_43,
+	REGHOLDING_FUNC_44,
+	REGHOLDING_FUNC_45,	
+	REGHOLDING_FUNC_46,
+	REGHOLDING_FUNC_47,
+	REGHOLDING_FUNC_48,
+	REGHOLDING_FUNC_49,
+	REGHOLDING_FUNC_50,
+	REGHOLDING_FUNC_51,	
+	REGHOLDING_FUNC_52,
+	REGHOLDING_FUNC_53,
+	REGHOLDING_FUNC_54,
+	REGHOLDING_FUNC_55,	
+	REGHOLDING_FUNC_56,
+	REGHOLDING_FUNC_57,
+	REGHOLDING_FUNC_58,
+	REGHOLDING_FUNC_59,
+	REGHOLDING_FUNC_60,
+	REGHOLDING_FUNC_61,	
+	REGHOLDING_FUNC_62,
+	REGHOLDING_FUNC_63,
+	REGHOLDING_FUNC_64,
+	REGHOLDING_FUNC_65,	
+	REGHOLDING_FUNC_66,
+	REGHOLDING_FUNC_67,
+	REGHOLDING_FUNC_68,
+	REGHOLDING_FUNC_69,
+	REGHOLDING_FUNC_70,
+	REGHOLDING_FUNC_71,	
+	REGHOLDING_FUNC_72,
+	REGHOLDING_FUNC_73,
+	REGHOLDING_FUNC_74,
+	REGHOLDING_FUNC_75,	
+	REGHOLDING_FUNC_76,
+	REGHOLDING_FUNC_77,
+	REGHOLDING_FUNC_78,
+	REGHOLDING_FUNC_79,
+	REGHOLDING_FUNC_80,
+	REGHOLDING_FUNC_81,	
+	REGHOLDING_FUNC_82,
+	REGHOLDING_FUNC_83,
+	REGHOLDING_FUNC_84,	
+};
+
 uint16_t usMBCRC16( uint8_t * pucFrame, uint16_t usLen )
 {
     uint8_t           ucCRCHi = 0xFF;
@@ -268,7 +357,7 @@ void eMBInit(uint8_t ucSlaveAddress, uint32_t ulBaudRate)
 #endif
 }
 
-uint8_t eMBPoll( void ){
+uint8_t eMBPoll( uint8_t* func ){
   
   static uint8_t   *ucMBFrame;
   static uint8_t    ucFunctionCode;
@@ -294,6 +383,7 @@ uint8_t eMBPoll( void ){
 			}
 			else if( xFuncHandlers[i].ucFunctionCode == ucFunctionCode ){
 				eException = xFuncHandlers[i].pxHandler( ucMBFrame, &usLength );
+				*func = ucFunctionCode;
 				break;                               
 			}
 		}
@@ -333,5 +423,35 @@ void TIME_IQR_HANDLER( void ){
 
 uint8_t ucADUReadRequestByte(uint8_t n)
 {
-	return ucRTUBuf[n];
+	return ucRTUBuf[MB_SER_PDU_PDU_OFF + MB_PDU_FUNC_OFF + n];
+}
+
+void modBusWriteFunctionHandler(uint8_t func)
+{
+	uint16_t reg_add, reg_cnt;
+	uint16_t i;
+		
+	if(func != MB_FUNC_WRITE_REGISTER && func != MB_FUNC_WRITE_MULTIPLE_REGISTERS)
+	{
+		return;
+	}
+
+	reg_add = (ucADUReadRequestByte(1) << 8) | (ucADUReadRequestByte(2));
+	
+	if(func == MB_FUNC_WRITE_MULTIPLE_REGISTERS)
+	{
+		reg_cnt = (ucADUReadRequestByte(3) << 8) | (ucADUReadRequestByte(4));
+	}
+	else
+	{
+		reg_cnt = 1;
+	}
+
+	for(i = 0; i < reg_cnt; i++)
+	{
+		if(writeHoldingFunc[reg_add + i] != NULL)
+		{
+			(*writeHoldingFunc[reg_add + i])(getHoldingRegAdd(reg_add + i));
+		}
+	}
 }

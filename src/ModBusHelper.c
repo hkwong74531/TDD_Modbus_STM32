@@ -9,12 +9,31 @@
   */
 #include "ModBusHelper.h"
 
+uint16_t ucMBInitState;
+
 uint32_t GPIOA, GPIOB, GPIOC, GPIOD;
 
 uint16_t usRegHoldingAddr[REG_HOLDING_NREGS];
 uint16_t usRegInputAddr[REG_INPUT_NREGS];
 
 uint8_t UART_DR;
+
+uint16_t test = 0;
+
+void ucMBSetInitState(uint16_t state)
+{
+	ucMBInitState = state;
+}
+
+uint16_t ucMBGetInitState(void)
+{
+	return ucMBInitState;
+}
+
+void writeHoldingDummy(uint16_t* reg_add)
+{
+	test = *(reg_add);
+}
 
 #if 0
 /* ------------------------------- ´®Æ·²Ù×÷ -----------------------------------*/

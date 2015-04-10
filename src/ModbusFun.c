@@ -1,8 +1,6 @@
 /* ----------------------- System includes ----------------------------------*/
 #include "ModBusFunc.h"
 
-static bool ucMBInitState;
-
 //输入寄存器内容
 uint16_t* usRegInputBuf[REG_INPUT_NREGS] = 	
 {
@@ -12,6 +10,7 @@ uint16_t* usRegInputBuf[REG_INPUT_NREGS] =
 	REGINPUT_03,
 	REGINPUT_04,
 	REGINPUT_05,	
+	REGINPUT_06,		
 };
 
 //保持寄存器内容
@@ -23,6 +22,85 @@ uint16_t* usRegHoldingBuf[REG_HOLDING_NREGS] =
 	REGHOLDING_03,
 	REGHOLDING_04,
 	REGHOLDING_05,	
+	REGHOLDING_06,
+	REGHOLDING_07,
+	REGHOLDING_08,
+	REGHOLDING_09,
+	REGHOLDING_10,
+	REGHOLDING_11,	
+	REGHOLDING_12,
+	REGHOLDING_13,
+	REGHOLDING_14,
+	REGHOLDING_15,
+	REGHOLDING_16,
+	REGHOLDING_17,	
+	REGHOLDING_18,
+	REGHOLDING_19,
+	REGHOLDING_20,
+	REGHOLDING_21,
+	REGHOLDING_22,
+	REGHOLDING_23,	
+	REGHOLDING_24,
+	REGHOLDING_25,
+	REGHOLDING_26,
+	REGHOLDING_27,
+	REGHOLDING_28,
+	REGHOLDING_29,	
+	REGHOLDING_30,
+	REGHOLDING_31,
+	REGHOLDING_32,
+	REGHOLDING_33,
+	REGHOLDING_34,
+	REGHOLDING_35,	
+	REGHOLDING_36,
+	REGHOLDING_37,
+	REGHOLDING_38,
+	REGHOLDING_39,
+	REGHOLDING_40,
+	REGHOLDING_41,	
+	REGHOLDING_42,
+	REGHOLDING_43,
+	REGHOLDING_44,
+	REGHOLDING_45,
+	REGHOLDING_46,
+	REGHOLDING_47,	
+	REGHOLDING_48,
+	REGHOLDING_49,
+	REGHOLDING_50,
+	REGHOLDING_51,
+	REGHOLDING_52,
+	REGHOLDING_53,	
+	REGHOLDING_54,
+	REGHOLDING_55,
+	REGHOLDING_56,
+	REGHOLDING_57,
+	REGHOLDING_58,
+	REGHOLDING_59,	
+	REGHOLDING_60,
+	REGHOLDING_61,
+	REGHOLDING_62,
+	REGHOLDING_63,
+	REGHOLDING_64,
+	REGHOLDING_65,	
+	REGHOLDING_66,
+	REGHOLDING_67,
+	REGHOLDING_68,
+	REGHOLDING_69,
+	REGHOLDING_70,
+	REGHOLDING_71,	
+	REGHOLDING_72,
+	REGHOLDING_73,
+	REGHOLDING_74,
+	REGHOLDING_75,
+	REGHOLDING_76,
+	REGHOLDING_77,	
+	REGHOLDING_78,
+	REGHOLDING_79,
+	REGHOLDING_80,
+	REGHOLDING_81,
+	REGHOLDING_82,
+	REGHOLDING_83,	
+	REGHOLDING_84,
 };
 
 #if(MB_FUNC_READ_COILS_ENABLED > 0 || MB_FUNC_WRITE_COIL_ENABLED > 0 || MB_FUNC_WRITE_MULTIPLE_COILS_ENABLED > 0)
@@ -55,16 +133,6 @@ MBDiscreteType MBDiscretes[REG_DISCRETE_SIZE] =
 };
 #endif
 
-void ucMBSetInitState(bool state)
-{
-	ucMBInitState = state;
-}
-
-bool ucMBGetInitState(void)
-{
-	return ucMBInitState;
-}
-
 /* -----------------------------------------------------------------------------
  * 功    能： 0x01（1） 读多个线圈 
  * 参    数： pucFrame去除地址后的数制桢
@@ -81,12 +149,12 @@ eMBException eMBFuncReadCoils( uint8_t * pucFrame, uint16_t * usLen )
     uint8_t           i, j, bit;
     uint8_t           ByteN;
 	  uint8_t           BitN;
-
+#if 0
 	if(ucMBGetInitState() == false)
 	{
 		return MB_EX_SLAVE_NOT_INIT;
 	}
-   
+#endif   
     //数据桢长度检测
     if( *usLen != ( MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN ) )
       return MB_EX_ILLEGAL_DATA_VALUE; 
@@ -239,12 +307,12 @@ eMBException eMBFuncReadDiscreteInputs( uint8_t * pucFrame, uint16_t * usLen )
     uint8_t           i, j, bit;
     uint8_t           ByteN;
     uint8_t           BitN;
-
+#if 0
 	if(ucMBGetInitState() == false)
 	{
 		return MB_EX_SLAVE_NOT_INIT;
 	}
-
+#endif
     //数据桢长度检测
     if( *usLen != ( MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN ) )
       return MB_EX_ILLEGAL_DATA_VALUE; 
@@ -379,12 +447,12 @@ eMBException eMBFuncReadHoldingRegister( uint8_t * pucFrame, uint16_t * usLen )
     uint16_t          usRegCount;
     uint8_t          *pucFrameCur;
     uint8_t           i;
-
+#if 0
 	if(ucMBGetInitState() == false)
 	{
 		return MB_EX_SLAVE_NOT_INIT;
 	}
-
+#endif
     //桢长检测
     if(*usLen != (MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN))
       return MB_EX_ILLEGAL_DATA_VALUE;
@@ -408,8 +476,8 @@ eMBException eMBFuncReadHoldingRegister( uint8_t * pucFrame, uint16_t * usLen )
     *pucFrameCur++ =(uint8_t)(usRegCount * 2);
     //回复寄存器内容
     for(i = 0; i < usRegCount; i++){
-      pucFrameCur[i * 2] = *(usRegHoldingBuf[i]) >> 8;
-      pucFrameCur[i * 2 + 1] = *(usRegHoldingBuf[i]) & 0xff;
+      pucFrameCur[i * 2] = *(usRegHoldingBuf[i + usRegAddress]) >> 8;
+      pucFrameCur[i * 2 + 1] = *(usRegHoldingBuf[i + usRegAddress]) & 0xff;
     }       
     *usLen = usRegCount * 2 + 2;        
     return MB_EX_NONE;
@@ -495,12 +563,12 @@ eMBException eMBFuncReadInputRegister( uint8_t * pucFrame, uint16_t * usLen )
     uint16_t          usRegCount;
     uint8_t          *pucFrameCur;
     uint8_t           i;
-
+#if 0
 	if(ucMBGetInitState() == false)
 	{
 		return MB_EX_SLAVE_NOT_INIT;
 	}
-
+#endif
     if( *usLen != ( MB_PDU_FUNC_READ_SIZE + MB_PDU_SIZE_MIN ) )
       return MB_EX_ILLEGAL_DATA_VALUE;
     
@@ -521,11 +589,12 @@ eMBException eMBFuncReadInputRegister( uint8_t * pucFrame, uint16_t * usLen )
     *pucFrameCur++ = (uint8_t)(usRegCount * 2);
 
     for(i = 0; i < usRegCount; i++){
-      pucFrameCur[i * 2] = *(usRegInputBuf[i]) >> 8;
-      pucFrameCur[i * 2 + 1] = *(usRegInputBuf[i]) & 0xff;
+      pucFrameCur[i * 2] = *(usRegInputBuf[i + usRegAddress]) >> 8;
+      pucFrameCur[i * 2 + 1] = *(usRegInputBuf[i + usRegAddress]) & 0xff;
     }       
             
     *usLen = usRegCount * 2 + 2;
+	
     return MB_EX_NONE;
 }
 #endif
@@ -578,6 +647,11 @@ eMBException eMBFuncReportSlaveID( uint8_t * pucFrame, uint16_t * usLen )
     memcpy( &pucFrame[MB_PDU_DATA_OFF], &ucMBSlaveID[0], ( size_t )usMBSlaveIDLen );
     *usLen = ( uint16_t )( MB_PDU_DATA_OFF + usMBSlaveIDLen );
     return MB_EX_NONE;
+}
+
+uint16_t* getHoldingRegAdd(uint8_t i)
+{
+	return usRegHoldingBuf[i];
 }
 #endif
 
